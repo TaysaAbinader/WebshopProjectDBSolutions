@@ -1,0 +1,1579 @@
+openapi: 3.0.3
+info:
+  title: Project webshop REST API
+  description: A  RESTful API for managing products, categories, customers, addresses, orders, and suppliers.
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: https://api.webshop.com/v1
+    description: Production server
+  - url: https://sandbox.api.webshop.com/v1
+    description: Sandbox/Testing server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /products:
+    get:
+      operationId: listProducts
+      security: []
+      tags:
+        - Products
+      summary: List products
+      description: Retrieve a list of products with optional filtering by category, supplier, or search term.
+      parameters:
+        - name: category_id
+          in: query
+          required: false
+          description: Filter products by category ID
+          schema:
+            type: integer
+        - name: supplier_id
+          in: query
+          required: false
+          description: Filter products by supplier ID
+          schema:
+            type: integer
+        - name: search
+          in: query
+          required: false
+          description: Search text matching product name or description
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of products retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: createProduct
+      tags:
+        - Products
+      summary: Create a new product
+      description: Add a new product to the catalog.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /products/{id}:
+    get:
+      operationId: getProductById
+      security: []
+      tags:
+        - Products
+      summary: Retrieve detailed product info
+      description: Get complete information about a specific product by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The product ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      operationId: updateProduct
+      tags:
+        - Products
+      summary: Update product details or stock quantity
+      description: Modify details of an existing product or update its available stock count.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The product ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdate'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: deleteProduct
+      tags:
+        - Products
+      summary: Delete a product
+      description: Remove a product from the catalog by its ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The product ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Product deleted successfully
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /categories:
+    get:
+      operationId: listCategories
+      security: []
+      tags:
+        - Product Categories
+      summary: List all product categories
+      description: Retrieve all available product categories.
+      responses:
+        '200':
+          description: List of categories retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: createCategory
+      tags:
+        - Product Categories
+      summary: Add a new category
+      description: Create a new product category.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '201':
+          description: Category created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /categories/{id}:
+    get:
+      operationId: getCategoryById
+      security: []
+      tags:
+        - Product Categories
+      summary: Get category details
+      description: Retrieve details of a specific product category by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The category ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Category details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      operationId: updateCategory
+      tags:
+        - Product Categories
+      summary: Update category name or description
+      description: Update details of an existing product category.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The category ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '200':
+          description: Category updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: deleteCategory
+      tags:
+        - Product Categories
+      summary: Remove a category
+      description: Remove a product category from the system.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The category ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Category deleted successfully
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /customers:
+    get:
+      operationId: listCustomers
+      tags:
+        - Customers
+      summary: List customers (Admin Context)
+      description: Retrieve a list of all registered customers. Usually restricted to administrative staff.
+      responses:
+        '200':
+          description: List of customers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: registerCustomer
+      security: []
+      tags:
+        - Customers
+      summary: Register a new customer account
+      description: Create a new customer profile.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerInput'
+      responses:
+        '201':
+          description: Customer registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /customers/{id}:
+    get:
+      operationId: getCustomerById
+      tags:
+        - Customers
+      summary: Fetch customer details
+      description: Retrieve the details of a customer profile.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The customer ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      operationId: updateCustomer
+      tags:
+        - Customers
+      summary: Update profile details
+      description: Update profile information such as email, phone, and name of a customer.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The customer ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerInput'
+      responses:
+        '200':
+          description: Customer updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: deleteCustomer
+      tags:
+        - Customers
+      summary: Remove customer account
+      description: Permanently remove a customer account from the system.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The customer ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Customer deleted successfully
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /customers/{customerId}/addresses:
+    get:
+      operationId: listCustomerAddresses
+      tags:
+        - Customer Addresses
+      summary: List saved delivery addresses
+      description: Retrieve all saved delivery addresses for a specific customer.
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          description: The customer ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of addresses retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Address'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: createCustomerAddress
+      tags:
+        - Customer Addresses
+      summary: Add a new delivery address
+      description: Add a new delivery address for a specific customer.
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          description: The customer ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressInput'
+      responses:
+        '201':
+          description: Address added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /customers/{customerId}/addresses/{addressId}:
+    get:
+      operationId: getCustomerAddressById
+      tags:
+        - Customer Addresses
+      summary: Retrieve a specific address
+      description: Retrieve a detailed record of a single address owned by a customer.
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          description: The customer ID
+          schema:
+            type: integer
+        - name: addressId
+          in: path
+          required: true
+          description: The address ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Address details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      operationId: updateCustomerAddress
+      tags:
+        - Customer Addresses
+      summary: Update address fields
+      description: Update specific fields of an existing customer address.
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          description: The customer ID
+          schema:
+            type: integer
+        - name: addressId
+          in: path
+          required: true
+          description: The address ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressInput'
+      responses:
+        '200':
+          description: Address updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: deleteCustomerAddress
+      tags:
+        - Customer Addresses
+      summary: Delete an address
+      description: Permanently remove a customer address by its ID.
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          description: The customer ID
+          schema:
+            type: integer
+        - name: addressId
+          in: path
+          required: true
+          description: The address ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Address deleted successfully
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /orders:
+    get:
+      operationId: listOrders
+      tags:
+        - Orders
+      summary: List orders
+      description: Retrieve list of customer orders with filters.
+      parameters:
+        - name: customer_id
+          in: query
+          required: false
+          description: Filter orders by customer ID
+          schema:
+            type: integer
+        - name: status
+          in: query
+          required: false
+          description: Filter orders by status
+          schema:
+            type: string
+            enum:
+              - pending
+              - paid
+              - shipped
+              - delivered
+              - cancelled
+      responses:
+        '200':
+          description: List of orders retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: placeOrder
+      tags:
+        - Orders
+      summary: Place a new order
+      description: Submit a new purchase order with items payload.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderInput'
+      responses:
+        '201':
+          description: Order placed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /orders/{id}:
+    get:
+      operationId: getOrderById
+      tags:
+        - Orders
+      summary: Fetch order details
+      description: Retrieve full details of an order, including nested line items.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The order ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Order retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: cancelOrder
+      tags:
+        - Orders
+      summary: Cancel or purge an order
+      description: Permanently remove or cancel an existing order by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The order ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Order cancelled or purged successfully
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /orders/{id}/status:
+    patch:
+      operationId: updateOrderStatus
+      tags:
+        - Orders
+      summary: Update order lifecycle status
+      description: Change the state of an order (e.g. mark it as paid, shipped, or delivered).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The order ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderStatusUpdate'
+      responses:
+        '200':
+          description: Order status updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /suppliers:
+    get:
+      operationId: listSuppliers
+      tags:
+        - Suppliers
+      summary: List suppliers
+      description: Retrieve list of all active suppliers.
+      responses:
+        '200':
+          description: List of suppliers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Supplier'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: registerSupplier
+      tags:
+        - Suppliers
+      summary: Register a new supplier
+      description: Add a new business partner/supplier to the catalog.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierInput'
+      responses:
+        '201':
+          description: Supplier registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /suppliers/{id}:
+    get:
+      operationId: getSupplierById
+      tags:
+        - Suppliers
+      summary: Get supplier info
+      description: Retrieve core information of a specific supplier by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The supplier ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Supplier details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      operationId: updateSupplier
+      tags:
+        - Suppliers
+      summary: Update contact details
+      description: Modify the name or contact information of an existing supplier.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The supplier ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierInput'
+      responses:
+        '200':
+          description: Supplier updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      operationId: removeSupplier
+      tags:
+        - Suppliers
+      summary: Remove supplier
+      description: Remove a supplier profile from the database.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The supplier ID
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Supplier removed successfully
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /suppliers/{supplierId}/addresses:
+    get:
+      operationId: getSupplierAddresses
+      tags:
+        - Supplier Addresses
+      summary: Get addresses for a supplier
+      description: Retrieve all operational addresses listed under a specific supplier.
+      parameters:
+        - name: supplierId
+          in: path
+          required: true
+          description: The supplier ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of supplier addresses retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Address'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      operationId: createSupplierAddress
+      tags:
+        - Supplier Addresses
+      summary: Add a supplier address
+      description: Register a new address for a supplier.
+      parameters:
+        - name: supplierId
+          in: path
+          required: true
+          description: The supplier ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressInput'
+      responses:
+        '201':
+          description: Address added to supplier successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /suppliers/{supplierId}/addresses/{addressId}:
+    put:
+      operationId: updateSupplierAddress
+      tags:
+        - Supplier Addresses
+      summary: Update supplier address details
+      description: Update details of a specific address listed under a supplier.
+      parameters:
+        - name: supplierId
+          in: path
+          required: true
+          description: The supplier ID
+          schema:
+            type: integer
+        - name: addressId
+          in: path
+          required: true
+          description: The address ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddressInput'
+      responses:
+        '200':
+          description: Supplier address updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+        '400':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Error Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Provide your JWT bearer token in the format `Bearer <token>` to access protected endpoints.
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: INVALID_PARAMETER
+        message:
+          type: string
+          example: The category_id field is required.
+    Category:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          example: 10
+        name:
+          type: string
+          example: Electronics
+        description:
+          type: string
+          nullable: true
+          example: Gadgets, devices, and electronic accessories.
+    CategoryInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: Electronics
+        description:
+          type: string
+          nullable: true
+          example: Gadgets, devices, and electronic accessories.
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - price
+        - stock_quantity
+        - category_id
+        - supplier_id
+      properties:
+        id:
+          type: integer
+          example: 101
+        name:
+          type: string
+          example: Wireless Noise-Canceling Headphones
+        description:
+          type: string
+          nullable: true
+          example: High-fidelity audio with active noise-canceling technology.
+        price:
+          type: number
+          minimum: 0.01
+          example: 199.99
+        stock_quantity:
+          type: integer
+          minimum: 0
+          example: 45
+        category_id:
+          type: integer
+          example: 10
+        supplier_id:
+          type: integer
+          example: 501
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-09-02T01:00:00Z'
+        updated_at:
+          type: string
+          format: date-time
+          example: '2026-09-02T01:00:00Z'
+    ProductInput:
+      type: object
+      required:
+        - name
+        - price
+        - stock_quantity
+        - category_id
+        - supplier_id
+      properties:
+        name:
+          type: string
+          example: Wireless Noise-Canceling Headphones
+        description:
+          type: string
+          nullable: true
+          example: High-fidelity audio with active noise-canceling technology.
+        price:
+          type: number
+          minimum: 0.01
+          example: 199.99
+        stock_quantity:
+          type: integer
+          minimum: 0
+          example: 45
+        category_id:
+          type: integer
+          example: 10
+        supplier_id:
+          type: integer
+          example: 501
+    ProductUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Wireless Noise-Canceling Headphones
+        description:
+          type: string
+          nullable: true
+          example: Updated high-fidelity audio headphones description.
+        price:
+          type: number
+          minimum: 0.01
+          example: 189.99
+        stock_quantity:
+          type: integer
+          minimum: 0
+          example: 50
+        category_id:
+          type: integer
+          example: 10
+        supplier_id:
+          type: integer
+          example: 501
+    Customer:
+      type: object
+      required:
+        - id
+        - first_name
+        - last_name
+        - email
+      properties:
+        id:
+          type: integer
+          example: 1001
+        first_name:
+          type: string
+          example: Alice
+        last_name:
+          type: string
+          example: Smith
+        email:
+          type: string
+          format: email
+          example: alice.smith@example.com
+        phone:
+          type: string
+          nullable: true
+          example: +1-555-0199
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-01-15T08:30:00Z'
+    CustomerInput:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - email
+      properties:
+        first_name:
+          type: string
+          example: Alice
+        last_name:
+          type: string
+          example: Smith
+        email:
+          type: string
+          format: email
+          example: alice.smith@example.com
+        phone:
+          type: string
+          nullable: true
+          example: +1-555-0199
+    Address:
+      type: object
+      required:
+        - id
+        - street
+        - city
+        - state
+        - postal_code
+        - country
+      properties:
+        id:
+          type: integer
+          example: 2001
+        street:
+          type: string
+          example: 123 Main Street
+        city:
+          type: string
+          example: Seattle
+        state:
+          type: string
+          example: WA
+        postal_code:
+          type: string
+          example: '98101'
+        country:
+          type: string
+          example: USA
+        is_default:
+          type: boolean
+          example: true
+    AddressInput:
+      type: object
+      required:
+        - street
+        - city
+        - state
+        - postal_code
+        - country
+      properties:
+        street:
+          type: string
+          example: 123 Main Street
+        city:
+          type: string
+          example: Seattle
+        state:
+          type: string
+          example: WA
+        postal_code:
+          type: string
+          example: '98101'
+        country:
+          type: string
+          example: USA
+        is_default:
+          type: boolean
+          default: false
+          example: true
+    OrderItem:
+      type: object
+      required:
+        - product_id
+        - quantity
+        - unit_price
+      properties:
+        product_id:
+          type: integer
+          example: 101
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+        unit_price:
+          type: number
+          minimum: 0.01
+          example: 199.99
+    OrderItemInput:
+      type: object
+      required:
+        - product_id
+        - quantity
+      properties:
+        product_id:
+          type: integer
+          example: 101
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+    Order:
+      type: object
+      required:
+        - id
+        - customer_id
+        - shipping_address_id
+        - status
+        - items
+        - total_amount
+        - created_at
+      properties:
+        id:
+          type: integer
+          example: 50001
+        customer_id:
+          type: integer
+          example: 1001
+        shipping_address_id:
+          type: integer
+          example: 2001
+        status:
+          type: string
+          enum:
+            - pending
+            - paid
+            - shipped
+            - delivered
+            - cancelled
+          example: pending
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        total_amount:
+          type: number
+          minimum: 0.01
+          example: 399.98
+        created_at:
+          type: string
+          format: date-time
+          example: '2026-09-02T01:00:00Z'
+        updated_at:
+          type: string
+          format: date-time
+          example: '2026-09-02T01:05:00Z'
+    OrderInput:
+      type: object
+      required:
+        - customer_id
+        - shipping_address_id
+        - items
+      properties:
+        customer_id:
+          type: integer
+          example: 1001
+        shipping_address_id:
+          type: integer
+          example: 2001
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrderItemInput'
+    OrderStatusUpdate:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - pending
+            - paid
+            - shipped
+            - delivered
+            - cancelled
+          example: shipped
+    Supplier:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          example: 501
+        name:
+          type: string
+          example: Apex Tech Suppliers
+        contact_name:
+          type: string
+          nullable: true
+          example: John Doe
+        email:
+          type: string
+          nullable: true
+          format: email
+          example: contact@apextech.com
+        phone:
+          type: string
+          nullable: true
+          example: +1-800-555-0199
+    SupplierInput:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          example: Apex Tech Suppliers
+        contact_name:
+          type: string
+          nullable: true
+          example: John Doe
+        email:
+          type: string
+          nullable: true
+          format: email
+          example: contact@apextech.com
+        phone:
+          type: string
+          nullable: true
+          example: +1-800-555-0199
