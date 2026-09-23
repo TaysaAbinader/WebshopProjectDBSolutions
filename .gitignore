@@ -1,2 +1,9 @@
 node_modules/
 .env
+target/
+*.class
+.idea/
+*.iml
+.classpath
+.project
+.settings/
