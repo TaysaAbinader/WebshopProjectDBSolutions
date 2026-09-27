@@ -31,22 +31,16 @@ All non-2xx responses returned by the application conform to a uniform JSON erro
 
 ```json
 {
-  "code": "VALIDATION_FAILED",
-  "message": "Validation failed for one or more fields",
-  "fieldErrors": {
-    "email": "Email must be a valid email address",
-    "firstName": "First name is required"
-  },
-  "timestamp": "2026-09-27T02:30:00"
+  "code": "INVALID_PARAMETER",
+  "message": "First name is required; Email must be a valid email address"
 }
 ```
 
 ### Handled Error Codes
 | HTTP Status | Error Code | Description |
 | :--- | :--- | :--- |
-| `400 Bad Request` | `VALIDATION_FAILED` | One or more input fields failed validation constraints (`@NotBlank`, `@Positive`, etc.). |
+| `400 Bad Request` | `INVALID_PARAMETER` | One or more input fields failed validation constraints (`@NotBlank`, `@Positive`, etc.) or invalid argument passed. |
 | `400 Bad Request` | `INSUFFICIENT_STOCK` | Requested purchase quantity exceeds available product stock. |
-| `400 Bad Request` | `INVALID_ARGUMENT` | Business rule failed (e.g. shipping address does not belong to the ordering customer). |
 | `404 Not Found` | `NOT_FOUND` | Target entity (product, order, customer, etc.) does not exist. |
 | `500 Internal Server Error`| `INTERNAL_SERVER_ERROR`| Uncaught system exception or unexpected database failure. |
 

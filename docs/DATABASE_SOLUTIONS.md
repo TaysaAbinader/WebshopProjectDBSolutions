@@ -35,7 +35,7 @@ The application database models a relational e-commerce system with 7 primary en
 
 ## 2. Database Views (Read Models)
 
-SQL views abstract complex multi-table joins and calculations away from the application layer, allowing both Spring Boot (via dedicated JPA `@Entity` views) and Express.js to execute straightforward `SELECT * FROM view_name` queries with full query engine caching.
+SQL views abstract complex multi-table joins and calculations away from the application layer, allowing Spring Boot (via dedicated JPA `@Entity` views) to execute straightforward `SELECT * FROM view_name` queries with full query engine caching.
 
 ### 2.1 `v_product_catalog`
 
@@ -197,8 +197,7 @@ ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMES
 ## 6. Security, Transaction Isolation & Data Integrity
 
 1. **SQL Injection Defense**:
-   * Spring Boot uses Spring Data JPA / Hibernate which strictly binds parameters via JDBC `PreparedStatement` interfaces.
-   * The Node.js / Express routes utilize MySQL prepared statements (`pool.query(sql, [params])`), completely neutralizing SQL injection risks.
+   * Spring Boot uses Spring Data JPA / Hibernate which strictly binds parameters via JDBC `PreparedStatement` interfaces, completely neutralizing SQL injection risks.
 2. **ACID Transaction Management**:
    * Order placement in [`OrderService.java`](../src/main/java/com/webshop/service/OrderService.java) is annotated with `@Transactional`.
    * If any line item fails validation or triggers an `InsufficientStockException` (or SQLSTATE 45000), the entire transaction rolls back, preventing orphaned order headers.

@@ -2,7 +2,7 @@
 
 A production-grade RESTful e-commerce backend service and relational database solution built with **Spring Boot 3**, **Java 21**, **Spring Data JPA / Hibernate**, and **MariaDB / MySQL**.
 
-The project delivers core online store workflows—catalog browsing, customer profile and delivery address management, supplier management, and transactional multi-table order placement—backed by advanced relational database features (SQL views, triggers, performance indexes) and a validated OpenAPI 3.0 specification.
+The project delivers core online store workflows—catalog browsing, customer profile and delivery address management, supplier management, and transactional multi-table order placement—backed by advanced relational database features (SQL views, triggers, performance indexes).
 
 ---
 
@@ -12,7 +12,6 @@ To keep this README scannable and easy to digest, detailed specifications are mo
 
 * 📖 **[Complete API Reference Guide](docs/API_REFERENCE.md)**: Exhaustive documentation for every endpoint, query parameters, path variables, JSON request/response schemas, and error codes.
 * 🗄️ **[Database Architecture & Solutions Guide](docs/DATABASE_SOLUTIONS.md)**: Deep dive into the underlying relational schema, SQL view definitions, database triggers, indexing strategy, audit columns, and ACID transaction security.
-* 📋 **[OpenAPI 3.0 Specification](openapi.yaml)**: Complete machine-readable OpenAPI schema for Swagger UI and client generation.
 
 ---
 
@@ -33,7 +32,7 @@ All endpoints are prefixed with `/v1`. For detailed request/response schemas and
 
 | HTTP Method | Endpoint | Resource | Purpose |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/v1/products` | Products | List catalog products (filters: `categoryId`, `supplierId`, `search`) |
+| `GET` | `/v1/products` | Products | List catalog products (filters: `category_id`, `supplier_id`, `search`) |
 | `GET` | `/v1/products/{id}` | Products | Retrieve a single product by ID via catalog view |
 | `POST` | `/v1/products` | Products | Create a new catalog product |
 | `PUT` | `/v1/products/{id}` | Products | Update an existing product |
@@ -54,7 +53,7 @@ All endpoints are prefixed with `/v1`. For detailed request/response schemas and
 | `GET` | `/v1/orders` | Orders | List order summaries with calculated sums & addresses |
 | `GET` | `/v1/orders/{id}` | Orders | Get detailed order summary by ID |
 | `POST` | `/v1/orders` | Orders | Submit a purchase order with items (transactional checkout) |
-| `PATCH` | `/v1/orders/{id}/status` | Orders | Update order status (`pending`, `shipped`, `delivered`, etc.) |
+| `PUT` | `/v1/orders/{id}/status` | Orders | Update order status (`pending`, `shipped`, `delivered`, etc.) |
 | `GET` | `/v1/suppliers` | Suppliers | List all partner suppliers |
 | `GET` | `/v1/suppliers/{id}` | Suppliers | Get supplier profile by ID |
 | `POST` | `/v1/suppliers` | Suppliers | Register a new supplier |
@@ -95,10 +94,14 @@ The backend delegates key operational burdens to the database engine ([`database
 
 ### 1. Database Setup
 ```sql
-CREATE DATABASE project CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS project CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
-Apply the database features script (views, triggers, indexes):
+Apply the base schema followed by the database features script (views, triggers, indexes):
 ```bash
+# 1. Create base tables and constraints
+mysql -u root -p project < schema.sql
+
+# 2. Create database views, triggers, and indexes
 mysql -u root -p project < database_features.sql
 ```
 
@@ -116,20 +119,9 @@ Environment variables or defaults in `src/main/resources/application.properties`
 # Execute automated test suite
 mvn clean test
 
+# Package into executable JAR
+mvn clean package -DskipTests
+
 # Run the Spring Boot application
 mvn spring-boot:run
 ```
-
-*(Optional)* A secondary lightweight Node.js/Express server is also provided:
-```bash
-npm install
-node index.js
-```
-
----
-
-## 📑 Interactive Documentation
-
-Once the Spring Boot application is started:
-* **Interactive Swagger UI**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
-* **OpenAPI 3.0 Raw JSON**: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
