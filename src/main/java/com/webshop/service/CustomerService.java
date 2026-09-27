@@ -48,6 +48,31 @@ public class CustomerService {
         return customerRepository.save(customer);
     }
 
+    public Customer updateCustomer(Long id, CustomerInputDto input) {
+        Customer customer = getCustomerById(id);
+        if (input.getEmail() != null && !input.getEmail().equalsIgnoreCase(customer.getEmail())) {
+            if (customerRepository.existsByEmail(input.getEmail())) {
+                throw new IllegalArgumentException("Customer with email " + input.getEmail() + " already exists");
+            }
+            customer.setEmail(input.getEmail());
+        }
+        if (input.getFirstName() != null) {
+            customer.setFirstName(input.getFirstName());
+        }
+        if (input.getLastName() != null) {
+            customer.setLastName(input.getLastName());
+        }
+        if (input.getPhone() != null) {
+            customer.setPhone(input.getPhone());
+        }
+        return customerRepository.save(customer);
+    }
+
+    public void deleteCustomer(Long id) {
+        Customer customer = getCustomerById(id);
+        customerRepository.delete(customer);
+    }
+
     @Transactional(readOnly = true)
     public List<CustomerAddress> getCustomerAddresses(Long customerId) {
         getCustomerById(customerId); // verify customer exists

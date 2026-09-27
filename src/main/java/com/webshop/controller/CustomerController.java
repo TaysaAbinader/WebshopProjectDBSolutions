@@ -39,6 +39,17 @@ public class CustomerController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @Valid @RequestBody CustomerInputDto input) {
+        return ResponseEntity.ok(customerService.updateCustomer(id, input));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
+        customerService.deleteCustomer(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/{customerId}/addresses")
     public ResponseEntity<List<CustomerAddress>> getAddresses(@PathVariable Long customerId) {
         return ResponseEntity.ok(customerService.getCustomerAddresses(customerId));
