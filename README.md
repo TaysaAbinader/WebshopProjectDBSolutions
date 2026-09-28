@@ -124,7 +124,7 @@ Environment variables or defaults in `src/main/resources/application.properties`
 * `DB_PORT` (default: `3306`)
 * `DB_NAME` (default: `project`)
 * `DB_USER` (default: `root`)
-* `DB_PASSWORD` (default: `abc123def`)
+* `DB_PASSWORD` (default: `password`)
 
 ### 3. Build & Run
 ```bash
