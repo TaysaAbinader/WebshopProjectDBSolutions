@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS SupplierAddresses (
     supplier_id BIGINT NOT NULL,
     street_address VARCHAR(255) NOT NULL,
     city VARCHAR(100) NOT NULL,
+    state VARCHAR(100) DEFAULT NULL,
     postal_code VARCHAR(20) NOT NULL,
     country VARCHAR(100) NOT NULL,
     CONSTRAINT fk_supplier_addr_supplier FOREIGN KEY (supplier_id) REFERENCES Suppliers(id) ON DELETE CASCADE
@@ -54,7 +55,8 @@ CREATE TABLE IF NOT EXISTS Customers (
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
-    phone VARCHAR(50)
+    phone VARCHAR(50),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 6. Customer Addresses Table
@@ -63,8 +65,10 @@ CREATE TABLE IF NOT EXISTS CustomerAddresses (
     customer_id BIGINT NOT NULL,
     street_address VARCHAR(255) NOT NULL,
     city VARCHAR(100) NOT NULL,
+    state VARCHAR(100) DEFAULT NULL,
     postal_code VARCHAR(20) NOT NULL,
     country VARCHAR(100) NOT NULL,
+    is_default BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT fk_customer_addr_customer FOREIGN KEY (customer_id) REFERENCES Customers(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

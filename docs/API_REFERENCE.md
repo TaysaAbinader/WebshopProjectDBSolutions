@@ -19,7 +19,7 @@ This document provides a comprehensive, exhaustive reference for all REST API en
 
 ## 1. Overview & Standards
 
-* **Base URL**: `http://localhost:8080/v1`
+* **Base URL**: `http://localhost:8085/v1` (default port 8085, configurable via `PORT`)
 * **Content Type**: `application/json` for all request bodies and responses.
 * **Authentication**: Currently configured for public/internal service mesh; inputs are validated at the controller layer with Jakarta Bean Validation (`@Valid`).
 

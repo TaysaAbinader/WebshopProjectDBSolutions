@@ -1,8 +1,8 @@
 # Relational Database Solutions & Architecture
 
-This document details the underlying relational database architecture, SQL optimizations, views, triggers, indexing strategies, and security mechanisms implemented in the MariaDB / MySQL database for the Webshop project.
+This document details the underlying relational database architecture, SQL optimizations, views, triggers, indexing strategies, and data integrity mechanisms implemented in the MariaDB / MySQL database for the Webshop project.
 
-All database-level components referenced here are defined in [`database_features.sql`](../database_features.sql).
+All database-level components referenced here are defined in [`schema.sql`](../schema.sql), [`database_features.sql`](../database_features.sql), and the incremental patch script [`apply_schema_updates.sql`](../apply_schema_updates.sql).
 
 ---
 
@@ -17,19 +17,21 @@ All database-level components referenced here are defined in [`database_features
 4. [Indexing Strategy & Query Optimization](#4-indexing-strategy--query-optimization)
 5. [Temporal Audit Columns](#5-temporal-audit-columns)
 6. [Security, Transaction Isolation & Data Integrity](#6-security-transaction-isolation--data-integrity)
+7. [Physical Naming & Case Sensitivity](#7-physical-naming--case-sensitivity)
 
 ---
 
 ## 1. Schema Overview & ER Relationships
 
-The application database models a relational e-commerce system with 7 primary entity tables:
-* **`Products`**: Core merchandise catalog (name, description, unit price, stock quantity, category, supplier).
-* **`ProductCategories`**: Hierarchical classification for products.
+The application database models a relational e-commerce system with 8 core entity tables:
+* **`Products`**: Core merchandise catalog (name, description, unit price, stock quantity, category, supplier, temporal timestamps).
+* **`ProductCategories`**: Classification hierarchy for products.
 * **`Suppliers`**: Partner vendors providing goods.
-* **`SupplierAddresses`**: Multi-address tracking for vendor logistics.
-* **`Customers`**: Registered user profiles (first name, last name, unique email, phone).
-* **`CustomerAddresses`**: Saved shipping and delivery addresses for customers.
-* **`Orders` & `OrderItems`**: Transactional header and line items capturing purchase snapshots (locked purchase prices and quantities).
+* **`SupplierAddresses`**: Multi-address tracking for vendor facilities (street, city, state, postal code, country).
+* **`Customers`**: Registered user profiles (first name, last name, unique email, phone, creation timestamp).
+* **`CustomerAddresses`**: Saved shipping and delivery addresses for customers (street, city, state, postal code, country, `is_default` flag).
+* **`Orders`**: Purchase order headers (customer, shipping address, lifecycle status, order date, delivery date, temporal timestamps).
+* **`OrderItems`**: Purchase line items locking product ID, purchased quantity, and purchase unit price.
 
 ---
 
@@ -58,7 +60,7 @@ LEFT JOIN Suppliers s ON p.supplier_id = s.id;
 
 #### Why it was implemented:
 * **Denormalization without Data Duplication**: The web storefront requires category and supplier names alongside product details for catalog display and filtering.
-* **Simplifies Application Code**: JPA repository [`ProductCatalogViewRepository.java`](../src/main/java/com/webshop/repository/ProductCatalogViewRepository.java) maps directly to this view as a read-only entity (`@Immutable`), removing manual JOIN queries from Java and Node.js.
+* **Simplifies Application Code**: JPA repository [`ProductCatalogViewRepository.java`](../src/main/java/com/webshop/repository/ProductCatalogViewRepository.java) maps directly to this view as a read-only entity (`@Immutable`), eliminating manual multi-table `JOIN` boilerplate from the application layer.
 * **Query Optimizer Synergy**: Leverages indexes on `p.category_id` and `p.supplier_id` automatically when executing joins.
 
 ---
@@ -92,7 +94,7 @@ GROUP BY o.id, o.customer_id, cust.first_name, cust.last_name, cust.email,
 #### Why it was implemented:
 * **Monetary Aggregate Calculation**: Computes `total_amount = SUM(quantity * unit_price)` dynamically on demand. If an order has no items yet, `COALESCE` safely defaults to `0.00`.
 * **String Concatenation & Formatting**: Consolidates customer name and shipping address fields in the database engine, reducing serialization and DTO manipulation overhead in the application tier.
-* **Unified Reporting**: Powers order search and history filtering (`GET /v1/orders?customerId=...&status=...`).
+* **Unified Reporting**: Powers order search and history filtering (`GET /v1/orders?customer_id=...&status=...`).
 
 ---
 
@@ -171,7 +173,7 @@ CREATE INDEX idx_orderitems_product ON OrderItems(product_id);
 1. **Catalog Search (`idx_products_name`)**: Accelerates `WHERE product_name LIKE ?` operations during user catalog search.
 2. **Catalog View Joins (`idx_products_category`, `idx_products_supplier`)**: Transforms the joins in `v_product_catalog` into $O(\log N)$ index lookups instead of scanning every product row.
 3. **Order Aggregation (`idx_orderitems_order`, `idx_orderitems_product`)**: When computing sums in `v_order_details` (`GROUP BY o.id` and joining `OrderItems`), indexing `order_id` ensures MariaDB quickly accesses only the line items belonging to that specific order.
-4. **Customer Order History (`idx_orders_customer`)**: Ensures instant response times when fetching all orders for a specific customer (`/v1/orders?customerId=...`).
+4. **Customer Order History (`idx_orders_customer`)**: Ensures instant response times when fetching all orders for a specific customer (`/v1/orders?customer_id=...`).
 
 ---
 
@@ -179,18 +181,16 @@ CREATE INDEX idx_orderitems_product ON OrderItems(product_id);
 
 To track row lifecycles without requiring application-side timestamp boilerplate:
 
-```sql
-ALTER TABLE Products
-ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+* **`Products`**:
+  * `created_at DATETIME DEFAULT CURRENT_TIMESTAMP`
+  * `updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`
+* **`Orders`**:
+  * `created_at DATETIME DEFAULT CURRENT_TIMESTAMP`
+  * `updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`
+* **`Customers`**:
+  * `created_at DATETIME DEFAULT CURRENT_TIMESTAMP`
 
-ALTER TABLE Orders
-ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
-```
-
-* `created_at`: Stamped with current system timestamp upon insertion.
-* `updated_at`: Automatically refreshed by the MySQL/MariaDB storage engine whenever any column in the row is altered.
+These columns ensure complete auditability directly managed by the MySQL / MariaDB storage engine.
 
 ---
 
@@ -202,6 +202,22 @@ ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMES
    * Order placement in [`OrderService.java`](../src/main/java/com/webshop/service/OrderService.java) is annotated with `@Transactional`.
    * If any line item fails validation or triggers an `InsufficientStockException` (or SQLSTATE 45000), the entire transaction rolls back, preventing orphaned order headers.
 3. **Foreign Key Integrity & Cascades**:
-   * Foreign keys ensure child records (e.g. `OrderItems`, `CustomerAddresses`) cannot reference non-existent parents.
+   * Foreign keys ensure child records (e.g. `OrderItems`, `CustomerAddresses`, `SupplierAddresses`) cannot reference non-existent parents. Deleting a customer or supplier cascades to their addresses, while order headers are restricted from accidental deletion.
 4. **Cross-Tenant Validation**:
    * During checkout, the service verifies that `shippingAddress.customerId == order.customerId`. If an address belonging to another customer is passed, the request is rejected with `400 Bad Request`.
+5. **Unique Constraints**:
+   * Customer emails are protected with a database-level `UNIQUE` constraint and pre-validated in `CustomerService` during registration and updates.
+
+---
+
+## 7. Physical Naming & Case Sensitivity
+
+By default, Spring Boot automatically converts entity table names from PascalCase to snake_case (e.g. `ProductCategories` becomes `product_categories`).
+
+On Linux/MariaDB environments where table names are case-sensitive by default, this creates `Table doesn't exist` errors. To prevent this, the application configures:
+
+```properties
+spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+```
+
+This guarantees Hibernate queries the exact table names annotated on the entities (`ProductCategories`, `SupplierAddresses`, `CustomerAddresses`, `OrderItems`, etc.), ensuring identical behavior across Windows, macOS, and Linux servers.
