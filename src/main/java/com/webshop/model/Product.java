@@ -1,5 +1,6 @@
 package com.webshop.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -27,8 +28,14 @@ public class Product {
     @JsonProperty("stock_quantity")
     private Integer stockQuantity = 0;
 
-    @Column(name = "category_id", nullable = false)
-    @JsonProperty("category_id")
+    // Owning side of the Category 1:M Product association (holds the category_id foreign key).
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "category_id", nullable = false)
+    @JsonIgnore
+    private Category category;
+
+    // Read-only mirror of the FK column so the JSON output keeps exposing "category_id".
+    @Column(name = "category_id", insertable = false, updatable = false)
     private Long categoryId;
 
     @Column(name = "supplier_id", nullable = false)
@@ -53,6 +60,10 @@ public class Product {
         this.price = price;
         this.stockQuantity = stockQuantity;
         this.categoryId = categoryId;
+        if (categoryId != null) {
+            this.category = new Category();
+            this.category.setId(categoryId);
+        }
         this.supplierId = supplierId;
     }
 
@@ -96,8 +107,17 @@ public class Product {
         this.stockQuantity = stockQuantity;
     }
 
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    @JsonProperty("category_id")
     public Long getCategoryId() {
-        return categoryId;
+        return category != null ? category.getId() : categoryId;
     }
 
     public void setCategoryId(Long categoryId) {

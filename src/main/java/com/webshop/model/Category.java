@@ -1,6 +1,9 @@
 package com.webshop.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -16,6 +19,13 @@ public class Category {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    // Inverse side of the 1:M association: one category has many products.
+    // LAZY: products are only fetched when getProducts() is actually used.
+    // CascadeType.ALL: saving/deleting a category also saves/deletes its products.
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Product> products = new ArrayList<>();
 
     public Category() {
     }
@@ -48,6 +58,24 @@ public class Category {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public List<Product> getProducts() {
+        return products;
+    }
+
+    public void setProducts(List<Product> products) {
+        this.products = products;
+    }
+
+    public void addProduct(Product product) {
+        products.add(product);
+        product.setCategory(this);
+    }
+
+    public void removeProduct(Product product) {
+        products.remove(product);
+        product.setCategory(null);
     }
 
     @Override

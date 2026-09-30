@@ -1,6 +1,9 @@
 package com.webshop.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CategoryInputDto {
 
@@ -8,6 +11,9 @@ public class CategoryInputDto {
     private String name;
 
     private String description;
+
+    @Valid
+    private List<CategoryProductInputDto> products = new ArrayList<>();
 
     public CategoryInputDto() {
     }
@@ -26,5 +32,13 @@ public class CategoryInputDto {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public List<CategoryProductInputDto> getProducts() {
+        return products;
+    }
+
+    public void setProducts(List<CategoryProductInputDto> products) {
+        this.products = products;
     }
 }

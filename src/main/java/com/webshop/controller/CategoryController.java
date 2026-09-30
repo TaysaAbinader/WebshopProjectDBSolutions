@@ -2,6 +2,7 @@ package com.webshop.controller;
 
 import com.webshop.dto.CategoryInputDto;
 import com.webshop.model.Category;
+import com.webshop.model.Product;
 import com.webshop.service.CategoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,11 @@ public class CategoryController {
     @GetMapping("/{id}")
     public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
         return ResponseEntity.ok(categoryService.getCategoryById(id));
+    }
+
+    @GetMapping("/{id}/products")
+    public ResponseEntity<List<Product>> getCategoryProducts(@PathVariable Long id) {
+        return ResponseEntity.ok(categoryService.getProductsOfCategory(id));
     }
 
     @PostMapping

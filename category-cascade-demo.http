@@ -1,0 +1,24 @@
+### 1. CASCADE PERSIST: save a category together with two products (needs an existing supplier id, here 1)
+POST http://localhost:8085/v1/categories
+Content-Type: application/json
+
+{
+  "name": "Books",
+  "description": "All books",
+  "products": [
+    { "name": "Novel",    "price": 9.90,  "stock_quantity": 10, "supplier_id": 1 },
+    { "name": "Cookbook", "price": 19.90, "stock_quantity": 5,  "supplier_id": 1 }
+  ]
+}
+
+### 2. LAZY LOADING: the category JSON contains no products; they are fetched only by this call
+### (replace 7 with the id returned by step 1)
+GET http://localhost:8085/v1/categories/7
+###
+GET http://localhost:8085/v1/categories/7/products
+
+### 3. CASCADE REMOVE: delete the category ...
+DELETE http://localhost:8085/v1/categories/7
+
+### ... and check that its products are gone too
+GET http://localhost:8085/v1/products?category_id=7

@@ -3,6 +3,7 @@ package com.webshop.service;
 import com.webshop.dto.ProductInputDto;
 import com.webshop.dto.ProductUpdateDto;
 import com.webshop.exception.ResourceNotFoundException;
+import com.webshop.model.Category;
 import com.webshop.model.Product;
 import com.webshop.model.ProductCatalogView;
 import com.webshop.repository.CategoryRepository;
@@ -53,9 +54,8 @@ public class ProductService {
     }
 
     public Product createProduct(ProductInputDto input) {
-        if (!categoryRepository.existsById(input.getCategoryId())) {
-            throw new ResourceNotFoundException("Category not found with ID: " + input.getCategoryId());
-        }
+        Category category = categoryRepository.findById(input.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + input.getCategoryId()));
         if (!supplierRepository.existsById(input.getSupplierId())) {
             throw new ResourceNotFoundException("Supplier not found with ID: " + input.getSupplierId());
         }
@@ -65,7 +65,7 @@ public class ProductService {
         product.setDescription(input.getDescription());
         product.setPrice(input.getPrice());
         product.setStockQuantity(input.getStockQuantity());
-        product.setCategoryId(input.getCategoryId());
+        category.addProduct(product);
         product.setSupplierId(input.getSupplierId());
 
         return productRepository.save(product);
@@ -87,10 +87,9 @@ public class ProductService {
             product.setStockQuantity(input.getStockQuantity());
         }
         if (input.getCategoryId() != null) {
-            if (!categoryRepository.existsById(input.getCategoryId())) {
-                throw new ResourceNotFoundException("Category not found with ID: " + input.getCategoryId());
-            }
-            product.setCategoryId(input.getCategoryId());
+            Category category = categoryRepository.findById(input.getCategoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + input.getCategoryId()));
+            product.setCategory(category);
         }
         if (input.getSupplierId() != null) {
             if (!supplierRepository.existsById(input.getSupplierId())) {
