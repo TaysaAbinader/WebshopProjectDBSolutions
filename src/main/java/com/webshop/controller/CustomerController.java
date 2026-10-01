@@ -1,8 +1,10 @@
 package com.webshop.controller;
 
 import com.webshop.dto.AddressInputDto;
+import com.webshop.dto.CompanyCustomerInputDto;
 import com.webshop.dto.CustomerInputDto;
 import com.webshop.dto.CustomerProfileInputDto;
+import com.webshop.model.CompanyCustomer;
 import com.webshop.model.Customer;
 import com.webshop.model.CustomerAddress;
 import com.webshop.model.CustomerProfile;
@@ -97,5 +99,15 @@ public class CustomerController {
     public ResponseEntity<Void> deleteProfile(@PathVariable Long id) {
         customerService.deleteCustomerProfile(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/companies")
+    public ResponseEntity<List<CompanyCustomer>> listCompanyCustomers() {
+        return ResponseEntity.ok(customerService.getAllCompanyCustomers());
+    }
+
+    @PostMapping("/companies")
+    public ResponseEntity<CompanyCustomer> registerCompanyCustomer(@Valid @RequestBody CompanyCustomerInputDto input) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(customerService.registerCompanyCustomer(input));
     }
 }

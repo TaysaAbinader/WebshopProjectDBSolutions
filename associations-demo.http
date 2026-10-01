@@ -1,6 +1,6 @@
 ### N:M Product <-> Supplier
 ### 1. Add a second supplier to product 1 (replace ids with ones that exist)
-PUT http://localhost:8085/v1/products/1/suppliers/2
+PUT http://localhost:8085/v1/products/1/suppliers/1
 
 ### 2. All suppliers of a product
 GET http://localhost:8085/v1/products/1/suppliers
@@ -28,3 +28,23 @@ GET http://localhost:8085/v1/customers/1/profile
 
 ### 7. Delete the profile (the customer is kept)
 DELETE http://localhost:8085/v1/customers/1/profile
+
+
+### Inheritance Customer -> CompanyCustomer (JOINED)
+### 8. Register a company customer
+POST http://localhost:8085/v1/customers/companies
+Content-Type: application/json
+
+{
+  "first_name": "Mia",
+  "last_name": "Korhonen",
+  "email": "mia@acme.fi",
+  "company_name": "Acme Oy",
+  "vat_number": "FI12345678"
+}
+
+### 9. All customers (private and company, company ones have extra fields)
+GET http://localhost:8085/v1/customers
+
+### 10. Only company customers
+GET http://localhost:8085/v1/customers/companies

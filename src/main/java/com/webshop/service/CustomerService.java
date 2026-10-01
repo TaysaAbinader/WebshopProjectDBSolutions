@@ -1,12 +1,15 @@
 package com.webshop.service;
 
 import com.webshop.dto.AddressInputDto;
+import com.webshop.dto.CompanyCustomerInputDto;
 import com.webshop.dto.CustomerInputDto;
 import com.webshop.dto.CustomerProfileInputDto;
 import com.webshop.exception.ResourceNotFoundException;
+import com.webshop.model.CompanyCustomer;
 import com.webshop.model.Customer;
 import com.webshop.model.CustomerAddress;
 import com.webshop.model.CustomerProfile;
+import com.webshop.repository.CompanyCustomerRepository;
 import com.webshop.repository.CustomerAddressRepository;
 import com.webshop.repository.CustomerProfileRepository;
 import com.webshop.repository.CustomerRepository;
@@ -22,9 +25,12 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerAddressRepository customerAddressRepository;
     private final CustomerProfileRepository customerProfileRepository;
+    private final CompanyCustomerRepository companyCustomerRepository;
 
     public CustomerService(CustomerRepository customerRepository, CustomerAddressRepository customerAddressRepository,
-                           CustomerProfileRepository customerProfileRepository) {
+                           CustomerProfileRepository customerProfileRepository,
+                           CompanyCustomerRepository companyCustomerRepository) {
+        this.companyCustomerRepository = companyCustomerRepository;
         this.customerRepository = customerRepository;
         this.customerAddressRepository = customerAddressRepository;
         this.customerProfileRepository = customerProfileRepository;
@@ -52,6 +58,25 @@ public class CustomerService {
         customer.setEmail(input.getEmail());
         customer.setPhone(input.getPhone());
         return customerRepository.save(customer);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CompanyCustomer> getAllCompanyCustomers() {
+        return companyCustomerRepository.findAll();
+    }
+
+    public CompanyCustomer registerCompanyCustomer(CompanyCustomerInputDto input) {
+        if (customerRepository.existsByEmail(input.getEmail())) {
+            throw new IllegalArgumentException("Customer with email " + input.getEmail() + " already exists");
+        }
+        CompanyCustomer customer = new CompanyCustomer();
+        customer.setFirstName(input.getFirstName());
+        customer.setLastName(input.getLastName());
+        customer.setEmail(input.getEmail());
+        customer.setPhone(input.getPhone());
+        customer.setCompanyName(input.getCompanyName());
+        customer.setVatNumber(input.getVatNumber());
+        return companyCustomerRepository.save(customer);
     }
 
     public Customer updateCustomer(Long id, CustomerInputDto input) {

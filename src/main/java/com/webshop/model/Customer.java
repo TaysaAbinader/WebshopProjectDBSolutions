@@ -8,6 +8,8 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "Customers")
+// JOINED: shared fields stay in Customers, subclass fields go to a separate table (CompanyCustomers)
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Customer {
 
     @Id
@@ -95,6 +97,11 @@ public class Customer {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @JsonProperty(value = "customer_type", access = JsonProperty.Access.READ_ONLY)
+    public String getCustomerType() {
+        return "private";
     }
 
     public CustomerProfile getProfile() {
