@@ -6,6 +6,7 @@ import com.webshop.exception.ResourceNotFoundException;
 import com.webshop.model.Category;
 import com.webshop.model.Product;
 import com.webshop.model.ProductCatalogView;
+import com.webshop.model.Supplier;
 import com.webshop.repository.CategoryRepository;
 import com.webshop.repository.ProductCatalogViewRepository;
 import com.webshop.repository.ProductRepository;
@@ -13,6 +14,7 @@ import com.webshop.repository.SupplierRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -56,9 +58,7 @@ public class ProductService {
     public Product createProduct(ProductInputDto input) {
         Category category = categoryRepository.findById(input.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + input.getCategoryId()));
-        if (!supplierRepository.existsById(input.getSupplierId())) {
-            throw new ResourceNotFoundException("Supplier not found with ID: " + input.getSupplierId());
-        }
+        Supplier supplier = getSupplierOrThrow(input.getSupplierId());
 
         Product product = new Product();
         product.setName(input.getName());
@@ -67,6 +67,7 @@ public class ProductService {
         product.setStockQuantity(input.getStockQuantity());
         category.addProduct(product);
         product.setSupplierId(input.getSupplierId());
+        product.addSupplier(supplier);
 
         return productRepository.save(product);
     }
@@ -92,13 +93,34 @@ public class ProductService {
             product.setCategory(category);
         }
         if (input.getSupplierId() != null) {
-            if (!supplierRepository.existsById(input.getSupplierId())) {
-                throw new ResourceNotFoundException("Supplier not found with ID: " + input.getSupplierId());
-            }
+            Supplier supplier = getSupplierOrThrow(input.getSupplierId());
             product.setSupplierId(input.getSupplierId());
+            product.addSupplier(supplier);
         }
 
         return productRepository.save(product);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Supplier> getSuppliersOfProduct(Long productId) {
+        return new ArrayList<>(getProductById(productId).getSuppliers());
+    }
+
+    public List<Supplier> addSupplierToProduct(Long productId, Long supplierId) {
+        Product product = getProductById(productId);
+        product.addSupplier(getSupplierOrThrow(supplierId));
+        return new ArrayList<>(productRepository.save(product).getSuppliers());
+    }
+
+    public void removeSupplierFromProduct(Long productId, Long supplierId) {
+        Product product = getProductById(productId);
+        product.removeSupplier(getSupplierOrThrow(supplierId));
+        productRepository.save(product);
+    }
+
+    private Supplier getSupplierOrThrow(Long supplierId) {
+        return supplierRepository.findById(supplierId)
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with ID: " + supplierId));
     }
 
     public void deleteProduct(Long id) {

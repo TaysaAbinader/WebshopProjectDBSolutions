@@ -5,7 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "Products")
@@ -37,6 +39,17 @@ public class Product {
     // Read-only mirror of the FK column so the JSON output keeps exposing "category_id".
     @Column(name = "category_id", insertable = false, updatable = false)
     private Long categoryId;
+
+    // N:M with Suppliers through the join table ProductSuppliers (Product is the owning side).
+    // supplier_id above stays as the main supplier; this set holds every supplier of the product.
+    @ManyToMany
+    @JoinTable(
+            name = "ProductSuppliers",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "supplier_id")
+    )
+    @JsonIgnore
+    private Set<Supplier> suppliers = new HashSet<>();
 
     @Column(name = "supplier_id", nullable = false)
     @JsonProperty("supplier_id")
@@ -122,6 +135,24 @@ public class Product {
 
     public void setCategoryId(Long categoryId) {
         this.categoryId = categoryId;
+    }
+
+    public Set<Supplier> getSuppliers() {
+        return suppliers;
+    }
+
+    public void setSuppliers(Set<Supplier> suppliers) {
+        this.suppliers = suppliers;
+    }
+
+    public void addSupplier(Supplier supplier) {
+        suppliers.add(supplier);
+        supplier.getProducts().add(this);
+    }
+
+    public void removeSupplier(Supplier supplier) {
+        suppliers.remove(supplier);
+        supplier.getProducts().remove(this);
     }
 
     public Long getSupplierId() {

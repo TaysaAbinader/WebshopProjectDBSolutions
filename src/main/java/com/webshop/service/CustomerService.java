@@ -2,10 +2,13 @@ package com.webshop.service;
 
 import com.webshop.dto.AddressInputDto;
 import com.webshop.dto.CustomerInputDto;
+import com.webshop.dto.CustomerProfileInputDto;
 import com.webshop.exception.ResourceNotFoundException;
 import com.webshop.model.Customer;
 import com.webshop.model.CustomerAddress;
+import com.webshop.model.CustomerProfile;
 import com.webshop.repository.CustomerAddressRepository;
+import com.webshop.repository.CustomerProfileRepository;
 import com.webshop.repository.CustomerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,10 +21,13 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final CustomerAddressRepository customerAddressRepository;
+    private final CustomerProfileRepository customerProfileRepository;
 
-    public CustomerService(CustomerRepository customerRepository, CustomerAddressRepository customerAddressRepository) {
+    public CustomerService(CustomerRepository customerRepository, CustomerAddressRepository customerAddressRepository,
+                           CustomerProfileRepository customerProfileRepository) {
         this.customerRepository = customerRepository;
         this.customerAddressRepository = customerAddressRepository;
+        this.customerProfileRepository = customerProfileRepository;
     }
 
     @Transactional(readOnly = true)
@@ -66,6 +72,43 @@ public class CustomerService {
             customer.setPhone(input.getPhone());
         }
         return customerRepository.save(customer);
+    }
+
+    @Transactional(readOnly = true)
+    public CustomerProfile getCustomerProfile(Long customerId) {
+        CustomerProfile profile = getCustomerById(customerId).getProfile();
+        if (profile == null) {
+            throw new ResourceNotFoundException("Profile not found for customer " + customerId);
+        }
+        return profile;
+    }
+
+    /** Creates the profile if the customer has none, otherwise updates it (1:1). */
+    public CustomerProfile saveCustomerProfile(Long customerId, CustomerProfileInputDto input) {
+        Customer customer = getCustomerById(customerId);
+        CustomerProfile profile = customer.getProfile();
+        if (profile == null) {
+            profile = new CustomerProfile();
+            customer.setProfile(profile);
+        }
+        if (input.getBirthDate() != null) {
+            profile.setBirthDate(input.getBirthDate());
+        }
+        if (input.getNewsletterSubscribed() != null) {
+            profile.setNewsletterSubscribed(input.getNewsletterSubscribed());
+        }
+        if (input.getPreferredLanguage() != null) {
+            profile.setPreferredLanguage(input.getPreferredLanguage());
+        }
+        return customerProfileRepository.save(profile);
+    }
+
+    public void deleteCustomerProfile(Long customerId) {
+        Customer customer = getCustomerById(customerId);
+        if (customer.getProfile() == null) {
+            throw new ResourceNotFoundException("Profile not found for customer " + customerId);
+        }
+        customer.setProfile(null); // orphanRemoval deletes the profile row
     }
 
     public void deleteCustomer(Long id) {

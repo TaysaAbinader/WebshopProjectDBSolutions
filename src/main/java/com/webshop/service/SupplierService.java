@@ -3,13 +3,16 @@ package com.webshop.service;
 import com.webshop.dto.SupplierAddressInputDto;
 import com.webshop.dto.SupplierInputDto;
 import com.webshop.exception.ResourceNotFoundException;
+import com.webshop.model.Product;
 import com.webshop.model.Supplier;
 import com.webshop.model.SupplierAddress;
+import com.webshop.repository.ProductRepository;
 import com.webshop.repository.SupplierAddressRepository;
 import com.webshop.repository.SupplierRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,10 +21,13 @@ public class SupplierService {
 
     private final SupplierRepository supplierRepository;
     private final SupplierAddressRepository supplierAddressRepository;
+    private final ProductRepository productRepository;
 
-    public SupplierService(SupplierRepository supplierRepository, SupplierAddressRepository supplierAddressRepository) {
+    public SupplierService(SupplierRepository supplierRepository, SupplierAddressRepository supplierAddressRepository,
+                           ProductRepository productRepository) {
         this.supplierRepository = supplierRepository;
         this.supplierAddressRepository = supplierAddressRepository;
+        this.productRepository = productRepository;
     }
 
     @Transactional(readOnly = true)
@@ -61,8 +67,19 @@ public class SupplierService {
         return supplierRepository.save(supplier);
     }
 
+    /** All products delivered by this supplier (N:M, read through the ProductSuppliers join table). */
+    @Transactional(readOnly = true)
+    public List<Product> getProductsOfSupplier(Long supplierId) {
+        getSupplierById(supplierId);
+        return productRepository.findBySuppliers_Id(supplierId);
+    }
+
     public void deleteSupplier(Long id) {
         Supplier supplier = getSupplierById(id);
+        // Product owns the join table, so detach the supplier from its products first
+        for (Product product : new ArrayList<>(supplier.getProducts())) {
+            product.removeSupplier(supplier);
+        }
         supplierRepository.delete(supplier);
     }
 

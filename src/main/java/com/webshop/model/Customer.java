@@ -1,5 +1,6 @@
 package com.webshop.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -30,6 +31,12 @@ public class Customer {
     @Column(name = "created_at", insertable = false, updatable = false)
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
+
+    // Inverse side of the 1:1: the foreign key is in CustomerProfiles.customer_id.
+    // cascade ALL + orphanRemoval: the profile is saved/deleted together with the customer.
+    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private CustomerProfile profile;
 
     public Customer() {
     }
@@ -88,6 +95,17 @@ public class Customer {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public CustomerProfile getProfile() {
+        return profile;
+    }
+
+    public void setProfile(CustomerProfile profile) {
+        this.profile = profile;
+        if (profile != null) {
+            profile.setCustomer(this);
+        }
     }
 
     @Override

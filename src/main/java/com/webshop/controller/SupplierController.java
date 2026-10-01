@@ -2,6 +2,7 @@ package com.webshop.controller;
 
 import com.webshop.dto.SupplierAddressInputDto;
 import com.webshop.dto.SupplierInputDto;
+import com.webshop.model.Product;
 import com.webshop.model.Supplier;
 import com.webshop.model.SupplierAddress;
 import com.webshop.service.SupplierService;
@@ -80,5 +81,10 @@ public class SupplierController {
     ) {
         supplierService.deleteSupplierAddress(supplierId, addressId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/products")
+    public ResponseEntity<List<Product>> getSupplierProducts(@PathVariable Long id) {
+        return ResponseEntity.ok(supplierService.getProductsOfSupplier(id));
     }
 }

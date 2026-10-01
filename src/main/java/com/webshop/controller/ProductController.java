@@ -4,6 +4,7 @@ import com.webshop.dto.ProductInputDto;
 import com.webshop.dto.ProductUpdateDto;
 import com.webshop.model.Product;
 import com.webshop.model.ProductCatalogView;
+import com.webshop.model.Supplier;
 import com.webshop.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -56,6 +57,22 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/suppliers")
+    public ResponseEntity<List<Supplier>> getProductSuppliers(@PathVariable Long id) {
+        return ResponseEntity.ok(productService.getSuppliersOfProduct(id));
+    }
+
+    @PutMapping("/{id}/suppliers/{supplierId}")
+    public ResponseEntity<List<Supplier>> addSupplier(@PathVariable Long id, @PathVariable Long supplierId) {
+        return ResponseEntity.ok(productService.addSupplierToProduct(id, supplierId));
+    }
+
+    @DeleteMapping("/{id}/suppliers/{supplierId}")
+    public ResponseEntity<Void> removeSupplier(@PathVariable Long id, @PathVariable Long supplierId) {
+        productService.removeSupplierFromProduct(id, supplierId);
         return ResponseEntity.noContent().build();
     }
 }

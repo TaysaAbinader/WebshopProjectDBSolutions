@@ -1,7 +1,10 @@
 package com.webshop.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 @Table(name = "Suppliers")
@@ -22,6 +25,11 @@ public class Supplier {
 
     @Column(length = 50)
     private String phone;
+
+    // Inverse side of the N:M association (the join table is defined in Product).
+    @ManyToMany(mappedBy = "suppliers")
+    @JsonIgnore
+    private Set<Product> products = new HashSet<>();
 
     public Supplier() {
     }
@@ -72,6 +80,14 @@ public class Supplier {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public Set<Product> getProducts() {
+        return products;
+    }
+
+    public void setProducts(Set<Product> products) {
+        this.products = products;
     }
 
     @Override

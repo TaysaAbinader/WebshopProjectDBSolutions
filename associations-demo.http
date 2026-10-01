@@ -1,0 +1,30 @@
+### N:M Product <-> Supplier
+### 1. Add a second supplier to product 1 (replace ids with ones that exist)
+PUT http://localhost:8085/v1/products/1/suppliers/2
+
+### 2. All suppliers of a product
+GET http://localhost:8085/v1/products/1/suppliers
+
+### 3. TEST SCENARIO: all products of a supplier
+GET http://localhost:8085/v1/suppliers/2/products
+
+### 4. Remove the supplier from the product again (product and supplier are kept)
+DELETE http://localhost:8085/v1/products/1/suppliers/2
+
+
+### 1:1 Customer <-> CustomerProfile
+### 5. Create the profile of customer 1 (PUT creates or updates)
+PUT http://localhost:8085/v1/customers/1/profile
+Content-Type: application/json
+
+{
+  "birth_date": "2000-05-17",
+  "newsletter_subscribed": true,
+  "preferred_language": "fi"
+}
+
+### 6. Read the profile
+GET http://localhost:8085/v1/customers/1/profile
+
+### 7. Delete the profile (the customer is kept)
+DELETE http://localhost:8085/v1/customers/1/profile

@@ -2,8 +2,10 @@ package com.webshop.controller;
 
 import com.webshop.dto.AddressInputDto;
 import com.webshop.dto.CustomerInputDto;
+import com.webshop.dto.CustomerProfileInputDto;
 import com.webshop.model.Customer;
 import com.webshop.model.CustomerAddress;
+import com.webshop.model.CustomerProfile;
 import com.webshop.service.CustomerService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -78,6 +80,22 @@ public class CustomerController {
             @PathVariable Long addressId
     ) {
         customerService.deleteCustomerAddress(customerId, addressId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/profile")
+    public ResponseEntity<CustomerProfile> getProfile(@PathVariable Long id) {
+        return ResponseEntity.ok(customerService.getCustomerProfile(id));
+    }
+
+    @PutMapping("/{id}/profile")
+    public ResponseEntity<CustomerProfile> saveProfile(@PathVariable Long id, @RequestBody CustomerProfileInputDto input) {
+        return ResponseEntity.ok(customerService.saveCustomerProfile(id, input));
+    }
+
+    @DeleteMapping("/{id}/profile")
+    public ResponseEntity<Void> deleteProfile(@PathVariable Long id) {
+        customerService.deleteCustomerProfile(id);
         return ResponseEntity.noContent().build();
     }
 }
