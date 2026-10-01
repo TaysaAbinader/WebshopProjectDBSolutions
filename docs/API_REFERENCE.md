@@ -245,6 +245,61 @@ All non-2xx responses returned by the application conform to a uniform JSON erro
 * **Path Parameters**: `id` (integer, required)
 * **Response**: `204 No Content`.
 
+### 5.6 List Company Customers
+* **Method & Path**: `GET /v1/customers/companies`
+* **Purpose**: Retrieves all registered corporate accounts mapped through the `CompanyCustomers` inheritance table.
+* **Response**:
+  * Status: `200 OK`
+  * Body:
+    ```json
+    [
+      {
+        "id": 2,
+        "first_name": "Mia",
+        "last_name": "Korhonen",
+        "email": "mia@acme.fi",
+        "phone": "+358-40-1234567",
+        "company_name": "Acme Oy",
+        "vat_number": "FI12345678",
+        "customer_type": "company"
+      }
+    ]
+    ```
+
+### 5.7 Register Company Customer
+* **Method & Path**: `POST /v1/customers/companies`
+* **Purpose**: Registers a new corporate customer, persisting base customer attributes into `Customers` and company-specific fields into `CompanyCustomers`.
+* **Request Body**:
+  ```json
+  {
+    "first_name": "Mia",
+    "last_name": "Korhonen",
+    "email": "mia@acme.fi",
+    "phone": "+358-40-1234567",
+    "company_name": "Acme Oy",
+    "vat_number": "FI12345678"
+  }
+  ```
+* **Validation Rules**:
+  * `first_name`, `last_name`: `@NotBlank`
+  * `email`: `@NotBlank`, `@Email`
+  * `company_name`: `@NotBlank`
+* **Response**:
+  * Status: `201 Created`
+  * Body: Created `CompanyCustomer` object with generated `id`.
+
+### 5.8 Customer Profile Management (1:1 Association)
+* **Get Profile**: `GET /v1/customers/{id}/profile` (Status: `200 OK`)
+* **Create/Update Profile**: `PUT /v1/customers/{id}/profile` (Status: `200 OK`)
+  ```json
+  {
+    "birth_date": "2000-05-17",
+    "newsletter_subscribed": true,
+    "preferred_language": "fi"
+  }
+  ```
+* **Delete Profile**: `DELETE /v1/customers/{id}/profile` (Status: `204 No Content`)
+
 ---
 
 ## 6. Customer Addresses API (`/v1/customers/{customerId}/addresses`)

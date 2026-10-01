@@ -48,6 +48,8 @@ All endpoints are prefixed with `/v1`. By default, the service runs on port `808
 | `POST` | `/v1/customers` | Customers | Register a new customer |
 | `PUT` | `/v1/customers/{id}` | Customers | Update customer contact information |
 | `DELETE` | `/v1/customers/{id}` | Customers | Delete a customer account |
+| `GET` | `/v1/customers/companies` | Customers | List only corporate customers (inheritance) |
+| `POST` | `/v1/customers/companies` | Customers | Register a new company customer (inheritance) |
 | `GET` | `/v1/customers/{id}/addresses` | Addresses | List delivery addresses for a customer |
 | `POST` | `/v1/customers/{id}/addresses` | Addresses | Add a new delivery address for a customer |
 | `GET` | `/v1/customers/{id}/addresses/{addrId}` | Addresses | Get a specific customer delivery address |

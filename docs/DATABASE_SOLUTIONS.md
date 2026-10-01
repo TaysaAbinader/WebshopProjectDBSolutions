@@ -221,3 +221,108 @@ spring.jpa.hibernate.naming.physical-strategy=org.hibernate.boot.model.naming.Ph
 ```
 
 This guarantees Hibernate queries the exact table names annotated on the entities (`ProductCategories`, `SupplierAddresses`, `CustomerAddresses`, `OrderItems`, etc.), ensuring identical behavior across Windows, macOS, and Linux servers.
+
+---
+
+## 8. Object-Relational Inheritance Mapping (Technical Objective 3)
+
+The application models business-to-business (B2B) and business-to-consumer (B2C) customer accounts via an object-oriented inheritance hierarchy mapped to the relational database.
+
+### 8.1 Class Hierarchy & Field Partitioning
+
+```
+               +---------------------------------------------+
+               |                  Customer                   |
+               +---------------------------------------------+
+               | - id: Long (PK)                             |
+               | - firstName: String                         |
+               | - lastName: String                          |
+               | - email: String (UNIQUE)                    |
+               | - phone: String                             |
+               | - createdAt: LocalDateTime                  |
+               | - profile: CustomerProfile (1:1)            |
+               +---------------------------------------------+
+                                      ▲
+                                      |
+                     [InheritanceType.JOINED]
+                                      |
+               +---------------------------------------------+
+               |               CompanyCustomer               |
+               +---------------------------------------------+
+               | - companyName: String (NOT NULL)            |
+               | - vatNumber: String                         |
+               +---------------------------------------------+
+```
+
+* **Shared Fields** (Root class `Customer` mapped to `Customers` table):
+  * `id`: Surrogate primary key (`BIGINT AUTO_INCREMENT` in `Customers`).
+  * `first_name` & `last_name`: Contact person name.
+  * `email`: Unique customer email address across both private and corporate accounts.
+  * `phone`: Contact telephone number.
+  * `created_at`: Account registration audit timestamp.
+  * Associations: Customer delivery addresses (`CustomerAddresses`), order history (`Orders`), and optional 1:1 user profile (`CustomerProfiles`).
+* **Specific Fields** (Subclass `CompanyCustomer` mapped to `CompanyCustomers` table):
+  * `company_name`: Official legal organization/company name (`VARCHAR(255) NOT NULL`).
+  * `vat_number`: Corporate tax/VAT identification number (`VARCHAR(50)`).
+  * `id`: Primary key and foreign key referencing `Customers(id)` with `ON DELETE CASCADE`.
+
+### 8.2 Database Schema Definition
+
+```sql
+CREATE TABLE IF NOT EXISTS CompanyCustomers (
+    id BIGINT NOT NULL PRIMARY KEY,
+    company_name VARCHAR(255) NOT NULL,
+    vat_number VARCHAR(50),
+    CONSTRAINT fk_company_customer FOREIGN KEY (id) 
+        REFERENCES Customers(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+### 8.3 JPA Entity Implementation
+
+* **Parent Entity** (`Customer.java`):
+  ```java
+  @Entity
+  @Table(name = "Customers")
+  @Inheritance(strategy = InheritanceType.JOINED)
+  public class Customer {
+      @Id
+      @GeneratedValue(strategy = GenerationType.IDENTITY)
+      private Long id;
+      ...
+  }
+  ```
+* **Child Entity** (`CompanyCustomer.java`):
+  ```java
+  @Entity
+  @Table(name = "CompanyCustomers")
+  @PrimaryKeyJoinColumn(name = "id")
+  public class CompanyCustomer extends Customer {
+      @Column(name = "company_name", nullable = false, length = 255)
+      @JsonProperty("company_name")
+      private String companyName;
+
+      @Column(name = "vat_number", length = 50)
+      @JsonProperty("vat_number")
+      private String vatNumber;
+      ...
+  }
+  ```
+
+### 8.4 Strategy Justification: Why `JOINED`?
+
+JPA supports three primary inheritance mapping strategies. `InheritanceType.JOINED` was chosen after comparing all trade-offs:
+
+| Criterion | `SINGLE_TABLE` | `TABLE_PER_CLASS` | `JOINED` (Selected) |
+| :--- | :--- | :--- | :--- |
+| **Relational Normalization** | ❌ Poor (violates 3NF; company columns remain `NULL` for private customers). | ⚠️ Redundant (duplicates all customer columns in both tables). | ✅ **Optimal (strict 3NF; each table holds only its own attributes).** |
+| **Schema Constraints** | ❌ Cannot enforce `NOT NULL` on `company_name` in DB (must be nullable for private customers). | ✅ Enforces `NOT NULL` on child tables. | ✅ **Enforces `NOT NULL` on `company_name` directly at database level.** |
+| **Referential Integrity** | ✅ Simple foreign keys to single table. | ❌ Foreign keys from `Orders` / `CustomerAddresses` cannot easily reference multiple tables. | ✅ **Existing FKs (`Orders.customer_id`, `CustomerAddresses.customer_id`) point directly to `Customers.id`.** |
+| **Global Uniqueness** | ✅ Single unique index on `email`. | ❌ Cannot enforce globally unique `email` across multiple independent tables without complex triggers. | ✅ **`UNIQUE(email)` constraint on `Customers` applies universally to all customer subtypes.** |
+| **Polymorphic Queries** | ✅ Fastest (no joins, filter by discriminator). | ❌ Slowest (requires expensive SQL `UNION` operations across all concrete tables). | ✅ **Fast & Clean: Single `INNER JOIN` or `LEFT JOIN` on primary key index `id`.** |
+
+**Summary Justification**:
+`JOINED` represents the most architecturally sound approach for our relational model because:
+1. It maintains strict **Third Normal Form (3NF)** and allows DB-level `NOT NULL` constraints on corporate-only fields (`company_name`).
+2. Existing relationships (`Orders`, `CustomerAddresses`, `CustomerProfiles`) continue to reference `Customers.id` seamlessly without alteration or fragmented foreign key constraints.
+3. The database-level `UNIQUE(email)` constraint remains authoritative for every customer in the system regardless of whether they are a private individual or a company.
