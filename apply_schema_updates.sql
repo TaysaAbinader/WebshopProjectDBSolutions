@@ -99,3 +99,32 @@ END;
 //
 
 DELIMITER ;
+
+-- 5. Associations & Inheritance Tables
+CREATE TABLE IF NOT EXISTS ProductSuppliers (
+    product_id INT NOT NULL,
+    supplier_id INT NOT NULL,
+    PRIMARY KEY (product_id, supplier_id),
+    CONSTRAINT fk_ps_product FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ps_supplier FOREIGN KEY (supplier_id) REFERENCES Suppliers(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT IGNORE INTO ProductSuppliers (product_id, supplier_id)
+SELECT id, supplier_id FROM Products WHERE supplier_id IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS CustomerProfiles (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT NOT NULL UNIQUE,
+    birth_date DATE,
+    newsletter_subscribed BOOLEAN NOT NULL DEFAULT FALSE,
+    preferred_language VARCHAR(10),
+    CONSTRAINT fk_profile_customer FOREIGN KEY (customer_id) REFERENCES Customers(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Technical Objective 3: Inheritance (JOINED) for Company Customers
+CREATE TABLE IF NOT EXISTS CompanyCustomers (
+    id INT NOT NULL PRIMARY KEY,
+    company_name VARCHAR(255) NOT NULL,
+    vat_number VARCHAR(50),
+    CONSTRAINT fk_company_customer FOREIGN KEY (id) REFERENCES Customers(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
